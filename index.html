@@ -1,0 +1,597 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#8255ef">
+<title>FANTASYLAND — Enter a magical world</title>
+
+<style>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+ margin:0;
+ font-family:system-ui,Arial,sans-serif;
+ background:#f6f0ff;
+ color:#30234c;
+}
+button{font:inherit;cursor:pointer}
+header{
+ background:linear-gradient(120deg,#8b5cf6,#ec4899,#22c9e8);
+ color:white;padding:20px 5%;
+ position:sticky;top:0;z-index:10;
+ box-shadow:0 4px 20px #5932a533;
+}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.logo{font-size:25px;font-weight:1000;letter-spacing:1px}
+.logo span{color:#ffe66d}
+nav{display:flex;gap:7px;flex-wrap:wrap;margin-top:15px}
+nav button,.lang{
+ border:0;border-radius:30px;padding:9px 13px;
+ background:#ffffff30;color:white;font-weight:800;
+}
+nav button:hover,.lang:hover{background:#ffffff55}
+nav button.active{background:white;color:#8255ef}
+main{max-width:1250px;margin:auto;padding:25px 18px}
+.hero{
+ min-height:390px;border-radius:30px;padding:35px;
+ color:white;display:flex;flex-direction:column;
+ justify-content:center;align-items:flex-start;
+ background:
+ linear-gradient(90deg,#42206de8,#42206d33),
+ url("https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1500")
+ center/cover;
+ box-shadow:0 12px 35px #53308a30;
+ overflow:hidden;
+}
+.hero h1{font-size:clamp(40px,8vw,76px);margin:5px 0}
+.hero p{font-size:19px;max-width:540px}
+.eyebrow{font-weight:900;letter-spacing:3px;color:#ffe66d}
+.primary{
+ background:linear-gradient(100deg,#ffb52e,#ff579b);
+ color:white;border:0;border-radius:30px;
+ padding:14px 24px;font-weight:900;
+ box-shadow:0 5px 15px #0002;
+}
+.primary:hover{transform:translateY(-2px)}
+h2{font-size:30px;margin:30px 0 15px}
+h3{margin:8px 0}
+.sub{color:#76678c}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:17px}
+.card{
+ background:white;border-radius:23px;padding:20px;
+ box-shadow:0 5px 20px #4d267d12;
+ border:2px solid #ffffff;
+}
+.world{
+ min-height:205px;color:white;display:flex;
+ flex-direction:column;justify-content:flex-end;
+ background:linear-gradient(0deg,#25153cdd,transparent 80%);
+ border-radius:23px;padding:19px;
+ overflow:hidden;position:relative;
+}
+.world .emoji{font-size:55px}
+.world button{
+ border:0;background:#ffffffed;color:#5934a1;
+ padding:9px 14px;border-radius:20px;font-weight:900;
+ align-self:flex-start;margin-top:9px;
+}
+.purple{background:linear-gradient(135deg,#a78bfa,#713de0)}
+.pink{background:linear-gradient(135deg,#ff83c8,#d946a8)}
+.blue{background:linear-gradient(135deg,#50d9ed,#3479db)}
+.green{background:linear-gradient(135deg,#79e6ae,#269e78)}
+.orange{background:linear-gradient(135deg,#ffc15c,#f47a40)}
+.yellow{background:linear-gradient(135deg,#ffe77b,#f7ad32)}
+.tile{
+ background:white;padding:18px;border-radius:20px;
+ box-shadow:0 5px 18px #44227710;
+}
+.tile .big{font-size:43px}
+.tile button,.action{
+ border:0;border-radius:20px;background:#eee5ff;
+ color:#6739ae;padding:10px 14px;font-weight:900;margin-top:9px;
+}
+.section{display:none;animation:appear .3s ease}
+.section.active{display:block}
+@keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.statbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.stat{
+ background:white;border-radius:15px;padding:12px 17px;
+ font-weight:900;box-shadow:0 3px 12px #44227710;
+}
+input,select{
+ padding:12px;border:2px solid #e8dcff;
+ border-radius:13px;font:inherit;max-width:100%;
+}
+.bigemoji{font-size:85px;text-align:center}
+.question{font-size:21px;font-weight:900}
+.answer{
+ display:block;width:100%;text-align:left;
+ border:2px solid #eadfff;background:#faf7ff;
+ padding:13px;border-radius:13px;margin:9px 0;
+}
+.answer:hover{background:#eee3ff}
+.feedback{font-weight:900;min-height:28px;margin:10px 0}
+.progress{height:13px;border-radius:20px;background:#e9e0f5;overflow:hidden}
+.progress div{height:100%;background:linear-gradient(90deg,#9b5cff,#ff65b0);width:0%;transition:.3s}
+footer{text-align:center;padding:35px;color:#88769e}
+.small{font-size:13px;color:#8c7c9f}
+#toast{
+ position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+ background:#35214e;color:white;padding:12px 20px;
+ border-radius:30px;display:none;z-index:30;
+}
+@media(max-width:600px){
+ header{padding:15px}
+ .hero{padding:24px;min-height:340px}
+ nav{gap:5px}
+ nav button{font-size:12px;padding:8px}
+ .logo{font-size:21px}
+}
+</style>
+</head>
+
+<body>
+<header>
+ <div class="top">
+  <div class="logo">🐉 FANTASY<span>LAND</span></div>
+  <div>
+   <span id="gemHeader">💎 0</span>
+   <button class="lang" onclick="toggleLanguage()">🇬🇧 EN / 🇳🇱 NL</button>
+  </div>
+ </div>
+ <nav id="nav"></nav>
+</header>
+
+<main>
+
+<!-- HOME -->
+<section id="home" class="section active">
+ <div class="hero">
+  <div class="eyebrow">✨ A MAGICAL ADVENTURE AWAITS</div>
+  <h1>FANTASYLAND</h1>
+  <p id="heroText">Ontdek magische koninkrijken, ontmoet draken en beleef avonturen die je nooit vergeet!</p>
+  <button class="primary" onclick="show('worlds')" id="enterBtn">ENTER FANTASYLAND ✨</button>
+ </div>
+
+ <div class="statbar">
+  <div class="stat">⭐ <span id="xp">0</span> XP</div>
+  <div class="stat">💎 <span id="gems">0</span> Gems</div>
+  <div class="stat">🏆 <span id="level">1</span> Level</div>
+ </div>
+
+ <h2 id="featuredTitle">🌈 Ontdek de fantasiewereld</h2>
+ <div class="grid" id="homeWorlds"></div>
+
+ <h2 id="quickTitle">✨ Wat ga je vandaag doen?</h2>
+ <div class="grid">
+  <div class="tile"><div class="big">🎮</div><h3>Games</h3><p>Speel magische spelletjes.</p><button onclick="show('games')">Spelen →</button></div>
+  <div class="tile"><div class="big">📜</div><h3>Quests</h3><p>Voltooi avontuurlijke opdrachten.</p><button onclick="show('quests')">Ontdekken →</button></div>
+  <div class="tile"><div class="big">🧙</div><h3>Character Creator</h3><p>Maak jouw eigen held.</p><button onclick="show('character')">Maken →</button></div>
+ </div>
+</section>
+
+<!-- WORLDS -->
+<section id="worlds" class="section">
+ <h2>🌍 Explore Worlds</h2>
+ <p class="sub">Vijf magische gebieden wachten op jou.</p>
+ <div class="grid" id="worldGrid"></div>
+ <div id="worldDetail" class="card" style="display:none;margin-top:20px"></div>
+</section>
+
+<!-- GAMES -->
+<section id="games" class="section">
+ <h2>🎮 Magic Game Center</h2>
+ <p class="sub">Speel spelletjes en verdien XP en edelstenen!</p>
+ <div class="grid">
+  <div class="tile"><div class="big">🐉</div><h3>Dragon Quiz</h3><p>Test je kennis over draken en fantasie.</p><button onclick="startQuiz()">Start quiz</button></div>
+  <div class="tile"><div class="big">🃏</div><h3>Magic Memory</h3><p>Vind alle dezelfde magische symbolen.</p><button onclick="startMemory()">Start memory</button></div>
+  <div class="tile"><div class="big">🔮</div><h3>Guess the Creature</h3><p>Raad welk wezen bij de aanwijzing hoort.</p><button onclick="startCreature()">Start raden</button></div>
+ </div>
+ <div id="gameArea" class="card" style="margin-top:20px">
+  <div class="bigemoji">🎲</div>
+  <h3>Kies hierboven een spel!</h3>
+ </div>
+</section>
+
+<!-- CHARACTER -->
+<section id="character" class="section">
+ <h2>🧙 Character Creator</h2>
+ <div class="card">
+  <div class="bigemoji" id="avatar">🧙</div>
+  <label>Naam van jouw personage</label><br><br>
+  <input id="charName" placeholder="Bijv. Luca de Tovenaar">
+  <h3>Kies jouw personage</h3>
+  <div class="grid">
+   <button class="answer" onclick="chooseAvatar('🧙')">🧙 Tovenaar</button>
+   <button class="answer" onclick="chooseAvatar('🧝')">🧝 Elf</button>
+   <button class="answer" onclick="chooseAvatar('🛡️')">🛡️ Ridder</button>
+   <button class="answer" onclick="chooseAvatar('🧚')">🧚 Fee</button>
+   <button class="answer" onclick="chooseAvatar('🐲')">🐲 Drakenrijder</button>
+  </div>
+  <button class="primary" onclick="saveCharacter()">Save character ✨</button>
+  <p id="charFeedback" class="feedback"></p>
+ </div>
+</section>
+
+<!-- QUESTS -->
+<section id="quests" class="section">
+ <h2>📜 Adventure Quests</h2>
+ <p class="sub">Voltooi opdrachten en word een echte Fantasyland-held!</p>
+ <div class="card">
+  <h3>⭐ Jouw avonturenvoortgang</h3>
+  <div class="progress"><div id="questProgress"></div></div>
+  <p id="questCount">0 / 5 quests voltooid</p>
+ </div>
+ <div id="questList" class="grid" style="margin-top:17px"></div>
+</section>
+
+<!-- CREATUREPEDIA -->
+<section id="creatures" class="section">
+ <h2>🐲 Creaturepedia</h2>
+ <p class="sub">Ontdek bijzondere wezens uit Fantasyland.</p>
+ <div class="grid" id="creatureGrid"></div>
+</section>
+
+<!-- POTIONS -->
+<section id="potions" class="section">
+ <h2>🧪 Potion Maker</h2>
+ <div class="card">
+  <div class="bigemoji" id="potionEmoji">🧪</div>
+  <h3>Maak jouw eigen toverdrank!</h3>
+  <p>Kies drie ingrediënten:</p>
+  <div class="grid">
+   <button class="answer" onclick="addIngredient('🌟')">🌟 Sterrenstof</button>
+   <button class="answer" onclick="addIngredient('🌈')">🌈 Regenboogdruppels</button>
+   <button class="answer" onclick="addIngredient('🍄')">🍄 Magische paddenstoel</button>
+   <button class="answer" onclick="addIngredient('💎')">💎 Kristalpoeder</button>
+   <button class="answer" onclick="addIngredient('🌸')">🌸 Feeënbloem</button>
+   <button class="answer" onclick="addIngredient('🔥')">🔥 Drakenvuur</button>
+  </div>
+  <p id="ingredients">Nog geen ingrediënten gekozen.</p>
+  <button class="primary" onclick="makePotion()">✨ Maak toverdrank</button>
+  <button class="action" onclick="resetPotion()">Opnieuw</button>
+  <p id="potionFeedback" class="feedback"></p>
+ </div>
+</section>
+
+<!-- COLLECTION -->
+<section id="collection" class="section">
+ <h2>🎒 My Collection</h2>
+ <div class="statbar">
+  <div class="stat">💎 <span id="collectionGems">0</span> Gems</div>
+  <div class="stat">⭐ <span id="collectionXP">0</span> XP</div>
+ </div>
+ <div class="grid" id="inventory"></div>
+</section>
+
+<!-- CASTLE -->
+<section id="castle" class="section">
+ <h2>🏰 My Castle</h2>
+ <div class="card">
+  <div class="bigemoji">🏰</div>
+  <h3>Welkom in jouw kasteel!</h3>
+  <p>Verzamel edelstenen om jouw kasteel een nieuwe uitstraling te geven.</p>
+  <div class="grid">
+   <button class="answer" onclick="decorate('🌷','Bloementuin',10)">🌷 Bloementuin — 10 💎</button>
+   <button class="answer" onclick="decorate('🐉','Drakenstandbeeld',20)">🐉 Drakenstandbeeld — 20 💎</button>
+   <button class="answer" onclick="decorate('🌈','Regenboogtoren',30)">🌈 Regenboogtoren — 30 💎</button>
+   <button class="answer" onclick="decorate('✨','Magische fontein',40)">✨ Magische fontein — 40 💎</button>
+  </div>
+  <h3>Jouw versieringen</h3>
+  <div id="decorations" style="font-size:35px">🏰</div>
+ </div>
+</section>
+
+<!-- ACHIEVEMENTS -->
+<section id="achievements" class="section">
+ <h2>🏆 Achievements</h2>
+ <p class="sub">Welke prestaties heb jij al behaald?</p>
+ <div class="grid" id="achievementGrid"></div>
+</section>
+
+</main>
+
+<footer>
+ 🐉 FANTASYLAND · ENTER A WORLD BEYOND IMAGINATION ✨
+ <p>Een magische wereld, gemaakt om ontdekt te worden.</p>
+</footer>
+<div id="toast"></div>
+
+<script>
+const translations={
+ nl:{
+  home:"Home",worlds:"Werelden",games:"Games",character:"Personage",
+  quests:"Quests",creatures:"Wezens",potions:"Drankjes",
+  collection:"Verzameling",castle:"Kasteel",achievements:"Prestaties",
+  hero:"Ontdek magische koninkrijken, ontmoet draken en beleef avonturen die je nooit vergeet!",
+  enter:"BETREED FANTASYLAND ✨",featured:"🌈 Ontdek de fantasiewereld",
+  quick:"✨ Wat ga je vandaag doen?"
+ },
+ en:{
+  home:"Home",worlds:"Worlds",games:"Games",character:"Character",
+  quests:"Quests",creatures:"Creatures",potions:"Potions",
+  collection:"Collection",castle:"Castle",achievements:"Achievements",
+  hero:"Discover magical kingdoms, meet dragons and experience adventures you'll never forget!",
+  enter:"ENTER FANTASYLAND ✨",featured:"🌈 Explore the fantasy world",
+  quick:"✨ What will you do today?"
+ }
+};
+let language="nl";
+let data=JSON.parse(localStorage.getItem("fantasyland")||"{}");
+data.xp=data.xp||0;
+data.gems=data.gems||0;
+data.completed=data.completed||[];
+data.decorations=data.decorations||[];
+data.items=data.items||[];
+data.avatar=data.avatar||"🧙";
+data.name=data.name||"";
+data.achievements=data.achievements||[];
+
+const worlds=[
+ {id:"dragon",emoji:"🐉",name:"Dragon Kingdom",nl:"Drakenrijk",color:"purple",desc:"Ontmoet draken, ontdek eieren en verken magische kastelen."},
+ {id:"forest",emoji:"🍄",name:"Enchanted Forest",nl:"Betoverd Bos",color:"green",desc:"Ontdek feeën, geheime paden en verborgen schatten."},
+ {id:"ocean",emoji:"🧜",name:"Mermaid Ocean",nl:"Zeemeerminnenzee",color:"blue",desc:"Duik naar onderwaterkastelen en mysterieuze zeedieren."},
+ {id:"candy",emoji:"🍭",name:"Candy Kingdom",nl:"Snoepkoninkrijk",color:"pink",desc:"Ontdek snoepkastelen en kleurrijke rivieren."},
+ {id:"cloud",emoji:"☁️",name:"Cloud Kingdom",nl:"Wolkenrijk",color:"orange",desc:"Verken zwevende eilanden en vliegende wezens."}
+];
+
+const creatures=[
+ ["🐉","Fire Dragon","Vuurdraak","Een krachtige draak die vuur kan spuwen."],
+ ["🦄","Unicorn","Eenhoorn","Een magisch paard met een glinsterende hoorn."],
+ ["🧚","Fairy","Fee","Een klein wezen met magische vleugels."],
+ ["🧜","Mermaid","Zeemeermin","Een magisch wezen dat in de oceaan woont."],
+ ["🐺","Moon Wolf","Maanwolf","Een mysterieuze wolf die bij maanlicht verschijnt."],
+ ["🦅","Sky Phoenix","Hemelfeniks","Een bijzondere vogel die uit zijn as herrijst."]
+];
+
+const quests=[
+ ["🌟","Discover a world","Ontdek een wereld","Bezoek een fantasiewereld."],
+ ["🎮","Play a game","Speel een spel","Speel een spelletje in het gamecentrum."],
+ ["🧙","Create a character","Maak een personage","Maak jouw eigen Fantasyland-held."],
+ ["🧪","Make a potion","Maak een drankje","Brouw een magisch drankje."],
+ ["🐲","Meet a creature","Ontmoet een wezen","Bekijk een wezen in Creaturepedia."]
+];
+
+function save(){
+ localStorage.setItem("fantasyland",JSON.stringify(data));
+ updateStats();
+}
+function t(key){return translations[language][key]||key}
+function toggleLanguage(){
+ language=language==="nl"?"en":"nl";
+ document.documentElement.lang=language;
+ renderNav();
+ document.getElementById("heroText").textContent=t("hero");
+ document.getElementById("enterBtn").textContent=t("enter");
+ document.getElementById("featuredTitle").textContent=t("featured");
+ document.getElementById("quickTitle").textContent=t("quick");
+ renderHome();
+ show(currentSection);
+}
+let currentSection="home";
+const sections=["home","worlds","games","character","quests","creatures","potions","collection","castle","achievements"];
+function renderNav(){
+ const nav=document.getElementById("nav");
+ nav.innerHTML=sections.map(s=>`<button data-page="${s}" onclick="show('${s}')">${t(s)}</button>`).join("");
+}
+function show(id){
+ currentSection=id;
+ sections.forEach(s=>document.getElementById(s).classList.toggle("active",s===id));
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
+ if(id==="quests")renderQuests();
+ if(id==="collection")renderInventory();
+ if(id==="achievements")renderAchievements();
+ if(id==="castle")renderCastle();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function updateStats(){
+ document.getElementById("xp").textContent=data.xp;
+ document.getElementById("gems").textContent=data.gems;
+ document.getElementById("gemHeader").textContent="💎 "+data.gems;
+ document.getElementById("level").textContent=Math.floor(data.xp/100)+1;
+}
+function toast(message){
+ const el=document.getElementById("toast");
+ el.textContent=message;el.style.display="block";
+ setTimeout(()=>el.style.display="none",2200);
+}
+function reward(xp,gems){
+ data.xp+=xp;data.gems+=gems;save();
+ toast("⭐ +"+xp+" XP   💎 +"+gems);
+ checkAchievements();
+}
+function renderWorlds(){
+ document.getElementById("worldGrid").innerHTML=worlds.map(w=>`
+ <div class="world ${w.color}">
+ <div class="emoji">${w.emoji}</div>
+ <h3>${language==="nl"?w.nl:w.name}</h3>
+ <p>${w.desc}</p>
+ <button onclick="openWorld('${w.id}')">Explore →</button>
+ </div>`).join("");
+}
+function renderHome(){
+ document.getElementById("homeWorlds").innerHTML=worlds.slice(0,3).map(w=>`
+ <div class="tile"><div class="big">${w.emoji}</div>
+ <h3>${language==="nl"?w.nl:w.name}</h3>
+ <button onclick="show('worlds')">Explore →</button></div>`).join("");
+}
+function openWorld(id){
+ const w=worlds.find(x=>x.id===id);
+ const detail=document.getElementById("worldDetail");
+ detail.style.display="block";
+ detail.innerHTML=`<div class="bigemoji">${w.emoji}</div>
+ <h2>${language==="nl"?w.nl:w.name}</h2><p>${w.desc}</p>
+ <p>✨ Je hebt dit gebied ontdekt!</p>
+ <button class="primary" onclick="completeQuest(0);reward(10,5)">Claim ontdekbeloning</button>`;
+ detail.scrollIntoView({behavior:"smooth"});
+}
+function chooseAvatar(a){
+ data.avatar=a;document.getElementById("avatar").textContent=a;
+}
+function saveCharacter(){
+ data.name=document.getElementById("charName").value.trim()||"Fantasy Hero";
+ save();completeQuest(2);
+ document.getElementById("charFeedback").textContent="✨ "+data.name+" is klaar voor avontuur!";
+}
+function renderQuests(){
+ document.getElementById("questList").innerHTML=quests.map((q,i)=>`
+ <div class="tile">
+ <div class="big">${q[0]}</div><h3>${language==="nl"?q[2]:q[1]}</h3>
+ <p>${q[3]}</p>
+ ${data.completed.includes(i)?"<b>✅ Completed</b>":`<button onclick="completeQuest(${i})">Complete quest</button>`}
+ </div>`).join("");
+ let n=data.completed.length;
+ document.getElementById("questProgress").style.width=(n/5*100)+"%";
+ document.getElementById("questCount").textContent=n+" / 5 quests voltooid";
+}
+function completeQuest(i){
+ if(data.completed.includes(i))return;
+ data.completed.push(i);reward(20,10);renderQuests();
+}
+function renderCreatures(){
+ document.getElementById("creatureGrid").innerHTML=creatures.map(c=>`
+ <div class="tile">
+ <div class="big">${c[0]}</div>
+ <h3>${language==="nl"?c[2]:c[1]}</h3><p>${c[3]}</p>
+ </div>`).join("");
+}
+let ingredients=[];
+function addIngredient(x){
+ if(ingredients.length>=3)return toast("Je hebt al drie ingrediënten!");
+ ingredients.push(x);
+ document.getElementById("ingredients").textContent=ingredients.join(" + ");
+ document.getElementById("potionEmoji").textContent=ingredients.join("");
+}
+function resetPotion(){
+ ingredients=[];document.getElementById("ingredients").textContent="Nog geen ingrediënten gekozen.";
+ document.getElementById("potionEmoji").textContent="🧪";
+}
+function makePotion(){
+ if(ingredients.length!==3)return toast("Kies eerst drie ingrediënten!");
+ const names=["Rainbow Magic","Dragon Power","Fairy Dream","Mystery Potion"];
+ const name=names[Math.floor(Math.random()*names.length)];
+ data.items.push({name:name,ingredients:ingredients.join("")});
+ reward(15,8);completeQuest(3);
+ document.getElementById("potionFeedback").textContent="✨ Je maakte: "+name+"!";
+ resetPotion();renderInventory();
+}
+function renderInventory(){
+ document.getElementById("collectionGems").textContent=data.gems;
+ document.getElementById("collectionXP").textContent=data.xp;
+ document.getElementById("inventory").innerHTML=`
+ <div class="tile"><div class="big">💎</div><h3>${data.gems} Gems</h3></div>
+ <div class="tile"><div class="big">⭐</div><h3>${data.xp} XP</h3></div>
+ ${data.items.map(i=>`<div class="tile"><div class="big">🧪</div><h3>${i.name}</h3><p>${i.ingredients}</p></div>`).join("")}
+ ${data.items.length===0?'<p>Maak drankjes om voorwerpen te verzamelen!</p>':""}`;
+}
+function decorate(emoji,name,cost){
+ if(data.decorations.includes(name))return toast("Deze versiering heb je al!");
+ if(data.gems<cost)return toast("Niet genoeg edelstenen!");
+ data.gems-=cost;data.decorations.push(name);save();renderCastle();
+ toast("🏰 Versiering toegevoegd!");
+}
+function renderCastle(){
+ document.getElementById("decorations").textContent="🏰 "+data.decorations.map(x=>({
+ Bloementuin:"🌷",Drakenstandbeeld:"🐉",Regenboogtoren:"🌈",Magischefontein:"✨"
+ }[x]||"✨")).join(" ");
+}
+function renderAchievements(){
+ const list=[
+ ["⭐","First Steps","Verdien 20 XP",data.xp>=20],
+ ["💎","Gem Collector","Verzamel 50 gems",data.gems>=50],
+ ["📜","Adventurer","Voltooi 3 quests",data.completed.length>=3],
+ ["🧙","Hero Creator","Maak een personage",!!data.name],
+ ["🧪","Potion Master","Maak een toverdrank",data.items.length>0]
+ ];
+ document.getElementById("achievementGrid").innerHTML=list.map(a=>`
+ <div class="tile"><div class="big">${a[0]}</div><h3>${a[1]}</h3>
+ <p>${a[2]}</p><b>${a[3]?"🏆 Unlocked":"🔒 Locked"}</b></div>`).join("");
+}
+function checkAchievements(){renderAchievements()}
+
+/* DRAGON QUIZ */
+const questions=[
+ ["Welke draak kan vuur spuwen?",["Vuurdraak","Waterdraak","IJsdraak"],0],
+ ["Waar woont een zeemeermin?",["In de woestijn","In de oceaan","Op de maan"],1],
+ ["Wat hoort bij een tovenaar?",["Toverstaf","Skateboard","Broodrooster"],0],
+ ["Welk wezen heeft een hoorn?",["Eenhoorn","Maanwolf","Draak"],0],
+ ["Wat verzamelt een schatzoeker?",["Sokken","Schatten","Wolken"],1]
+];
+function startQuiz(){
+ let i=0,score=0;
+ const area=document.getElementById("gameArea");
+ function next(){
+  if(i>=questions.length){
+   area.innerHTML=`<div class="bigemoji">🏆</div><h2>Quiz finished!</h2><p>Je had ${score} van de 5 goed!</p><button class="primary" onclick="startQuiz()">Play again</button>`;
+   if(score>0)reward(score*10,score*3);
+   completeQuest(1);return;
+  }
+  let q=questions[i];
+  area.innerHTML=`<p>Question ${i+1} / 5</p><div class="question">${q[0]}</div>
+  ${q[1].map((a,j)=>`<button class="answer" onclick="answer(${j})">${a}</button>`).join("")}
+  <div id="quizFeedback" class="feedback"></div>`;
+ }
+ window.answer=function(j){
+  let q=questions[i];
+  let f=document.getElementById("quizFeedback");
+  if(j===q[2]){score++;f.textContent="✅ Correct!";}
+  else f.textContent="❌ Helaas! Het juiste antwoord was "+q[1][q[2]];
+  area.querySelectorAll(".answer").forEach(b=>b.disabled=true);
+  i++;setTimeout(next,850);
+ };
+ next();
+}
+function startCreature(){
+ let index=Math.floor(Math.random()*creatures.length);
+ const c=creatures[index];
+ let area=document.getElementById("gameArea");
+ area.innerHTML=`<div class="bigemoji">🔮</div><h3>Raad het wezen!</h3>
+ <p>${c[3]}</p><div class="grid">${creatures.map((x,i)=>`
+ <button class="answer" onclick="guessCreature(${i},${index})">${x[0]} ${x[1]}</button>`).join("")}</div>
+ <div class="feedback" id="guessFeedback"></div>`;
+}
+function guessCreature(choice,correct){
+ let f=document.getElementById("guessFeedback");
+ if(choice===correct){f.textContent="🎉 Helemaal goed!";reward(15,5);completeQuest(4);}
+ else f.textContent="❌ Probeer nog eens!";
+}
+function startMemory(){
+ const symbols=["🐉","🧚","🦄","🔮","🍄","💎"];
+ let cards=[...symbols,...symbols].sort(()=>Math.random()-.5);
+ let open=[],matched=0,locked=false;
+ let area=document.getElementById("gameArea");
+ area.innerHTML=`<h3>🃏 Magic Memory</h3><p>Zoek alle paren!</p><div class="grid" id="memoryGrid" style="grid-template-columns:repeat(4,1fr)"></div>`;
+ const grid=document.getElementById("memoryGrid");
+ cards.forEach((c,i)=>{
+  let b=document.createElement("button");b.className="answer";
+  b.style.fontSize="27px";b.textContent="❔";
+  b.onclick=()=>{
+   if(locked||b.dataset.done||open.some(x=>x.i===i))return;
+   b.textContent=c;open.push({i,c,b});
+   if(open.length===2){
+    locked=true;
+    if(open[0].c===open[1].c){
+     open.forEach(x=>{x.b.dataset.done="1";x.b.style.background="#d5ffe7"});
+     matched++;open=[];locked=false;
+     if(matched===6){area.insertAdjacentHTML("beforeend","<h2>🏆 You won!</h2>");reward(40,20);completeQuest(1);}
+    }else{
+     setTimeout(()=>{open.forEach(x=>x.b.textContent="❔");open=[];locked=false},750);
+    }
+   }
+  };
+  grid.appendChild(b);
+ });
+}
+renderNav();
+renderWorlds();
+renderHome();
+renderCreatures();
+renderQuests();
+renderNav();
+updateStats();
+renderCastle();
+</script>
+</body>
+</html>
