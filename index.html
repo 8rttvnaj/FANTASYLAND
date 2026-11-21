@@ -1,26 +1,474 @@
 
-function world(id){
- let w=worlds.find(x=>x[0]===id);
- go('map');
- document.getElementById('mapDetail').innerHTML=`
- <div class="bigemoji">${w[1]}</div>
- <h2>${lang==='nl'?w[3]:w[2]}</h2>
- <p>${w[5]}</p>
- <h3>🌟 Your adventure begins!</h3>
- <p>Ontdek deze wereld en verdien XP en edelstenen.</p>
- <button class="primary" onclick="discover('${id}')">▶ START ADVENTURE</button>`;
- document.getElementById('mapDetail').scrollIntoView({behavior:'smooth'});
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>FANTASYLAND 3D</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#170d30;color:white;font-family:Arial;overflow:hidden}
+#game{position:fixed;inset:0}
+canvas{display:block}
+#top{position:fixed;top:0;left:0;right:0;padding:12px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(#140b30dd,transparent);z-index:5;pointer-events:none}
+#logo{font-size:22px;font-weight:1000}
+#stats{background:#24163dcc;padding:9px;border-radius:12px}
+#worldSelect{position:fixed;top:62px;left:10px;z-index:7;max-width:190px;padding:10px;border-radius:12px;background:#291747;color:white;border:2px solid #c28cff}
+#message{position:fixed;top:110px;left:50%;transform:translateX(-50%);background:#24163dcc;border-radius:15px;padding:10px;text-align:center;max-width:85%;font-size:13px;z-index:4}
+#controls{position:fixed;bottom:18px;left:0;right:0;z-index:6;display:flex;justify-content:space-between;align-items:end;padding:0 22px;pointer-events:none}
+#joy{width:125px;height:125px;border-radius:50%;background:#ffffff25;border:3px solid #ffffff85;position:relative;pointer-events:auto;touch-action:none}
+#stick{width:55px;height:55px;border-radius:50%;position:absolute;left:32px;top:32px;background:linear-gradient(135deg,#ff8bd7,#9a65ff);pointer-events:none}
+#rightControls{display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:auto}
+.action{width:70px;height:60px;border-radius:18px;border:2px solid #ffffff88;background:#a75cffdd;color:white;font-size:23px;touch-action:manipulation}
+#lookHelp{font-size:10px;background:#17102cbb;padding:7px;border-radius:10px}
+#loading{position:fixed;inset:0;background:#180e32;z-index:20;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+#loading h1{font-size:34px;color:#ffb5f0}
+button{cursor:pointer}
+.primary{padding:14px 24px;border:0;border-radius:14px;background:#ffca55;font-size:17px;font-weight:bold;color:#321747}
+#creator{
+ display:none;position:fixed;inset:0;z-index:15;
+ background:#170d30ee;overflow-y:auto;padding:15px;
+}
+.creatorBox{max-width:600px;margin:10px auto;background:#302052;border:2px solid #b77cff;border-radius:22px;padding:18px}
+.creatorBox h2{text-align:center;color:#ffd2f2}
+.preview{height:210px;border-radius:15px;background:linear-gradient(#85d8ff,#d8baff);overflow:hidden;position:relative}
+#previewGame{width:100%;height:100%}
+.field{margin:13px 0}
+.field label{display:block;font-weight:bold;margin-bottom:7px}
+.field input,.field select{width:100%;padding:12px;border-radius:10px;border:0;font-size:16px}
+.colors{display:flex;flex-wrap:wrap;gap:9px}
+.color{width:34px;height:34px;border-radius:50%;border:3px solid white}
+.color.selected{outline:3px solid #ffce55}
+.creatorButtons{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
+.creatorButtons button{flex:1}
+.small{font-size:12px;color:#e0d3ff}
+@media(max-width:500px){#logo{font-size:18px}.creatorBox{padding:13px}}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="top">
+ <div id="logo">✨ FANTASYLAND</div>
+ <div id="stats">💎 <span id="gems">0</span> ⭐ <span id="level">1</span></div>
+</div>
+<select id="worldSelect"></select>
+<div id="message">Welkom in FANTASYLAND! 🌲</div>
+
+<div id="controls">
+ <div id="joy"><div id="stick"></div></div>
+ <div id="rightControls">
+  <div id="lookHelp">Vinger bewegen = rondkijken</div>
+  <button class="action" id="interact">✋</button>
+ </div>
+</div>
+
+<div id="creator">
+ <div class="creatorBox">
+  <h2>✨ MAAK JOUW PERSONAGE ✨</h2>
+  <div class="preview"><div id="previewGame"></div></div>
+
+  <div class="field">
+   <label>Naam van je personage</label>
+   <input id="avatarName" maxlength="16" placeholder="Bijvoorbeeld Luca">
+  </div>
+
+  <div class="field">
+   <label>Huidskleur</label>
+   <div class="colors" id="skinColors"></div>
+  </div>
+
+  <div class="field">
+   <label>Haarkleur</label>
+   <div class="colors" id="hairColors"></div>
+  </div>
+
+  <div class="field">
+   <label>Kapsel</label>
+   <select id="hairStyle">
+    <option value="normal">Normaal kapsel</option>
+    <option value="spikes">Stekelig haar</option>
+    <option value="long">Lang haar</option>
+    <option value="crown">Koninklijk kapsel</option>
+   </select>
+  </div>
+
+  <div class="field">
+   <label>Kledingkleur</label>
+   <div class="colors" id="outfitColors"></div>
+  </div>
+
+  <div class="field">
+   <label>Accessoire</label>
+   <select id="accessory">
+    <option value="none">Geen accessoire</option>
+    <option value="crown">👑 Kroon</option>
+    <option value="wings">🪽 Vleugels</option>
+    <option value="hat">🎩 Hoed</option>
+    <option value="horns">🦄 Eenhoornhoorn</option>
+   </select>
+  </div>
+
+  <div class="field">
+   <label>Schoenen</label>
+   <select id="shoes">
+    <option value="dark">Donkere schoenen</option>
+    <option value="white">Witte schoenen</option>
+    <option value="gold">Gouden schoenen</option>
+    <option value="pink">Roze schoenen</option>
+   </select>
+  </div>
+
+  <div class="creatorButtons">
+   <button class="primary" id="saveAvatar">💖 BEWAAR PERSONAGE</button>
+   <button class="primary" id="closeCreator">TERUG NAAR SPEL</button>
+  </div>
+  <p class="small">Je kunt je personage altijd opnieuw aanpassen.</p>
+ </div>
+</div>
+
+<div id="loading">
+ <h1>✨ FANTASYLAND ✨</h1>
+ <p>Jouw 3D-avontuur wacht!</p>
+ <p id="loadText">Wereld laden...</p>
+ <button id="play" class="primary" style="display:none">SPELEN!</button>
+ <button id="openCreator" class="primary" style="display:none;margin-top:10px">🎨 MAAK PERSONAGE</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(()=>{
+"use strict";
+const worlds=[
+["🌳","Toverbos",0x80c9ff,0x347849,0x27713c],
+["🐉","Drakenrijk",0x91b9ff,0x527344,0x385c35],
+["🧜","Oceaanrijk",0x6bd9ef,0x1685a0,0x14677f],
+["🍬","Snoepkoninkrijk",0xffb6d9,0xe99bd4,0xb86bba],
+["☁️","Wolkenrijk",0x9edbff,0xd5eaff,0x9bb9e9],
+["💎","Kristalvallei",0xb5aaff,0x6552a1,0x493b85],
+["🌋","Vulkaanland",0xffa16b,0x8b4937,0x62352c],
+["❄️","IJskoninkrijk",0xbceaff,0xb5e2f5,0x75b4d5],
+["🧚","Feeëntuin",0xffd3f3,0x6aab69,0x438a5b],
+["🏜️","Magische Woestijn",0xffd28a,0xd5a65e,0xb98545],
+["🌙","Maanlichtbos",0x9b9bff,0x373a70,0x252b57],
+["🏰","Koninkrijk",0xa5caff,0x588c65,0x396447],
+["🍄","Paddenstoelenbos",0xc9a3ff,0x4d914f,0x316a39],
+["🦕","Dinosauriërsvallei",0x9ddc9c,0x638d47,0x416e35],
+["🌸","Sakurawereld",0xffc5dc,0x77a86d,0x54864c],
+["⚡","Donderbergen",0x8ca9db,0x515b70,0x343e58],
+["🧊","Bevroren Oceaan",0x9be5ff,0x5db2d1,0x327caa],
+["🪄","Tovenaarsacademie",0xbca4ff,0x554b80,0x37325e],
+["🦄","Eenhoornvallei",0xffc9f1,0x8cbf85,0x639d68],
+["👑","Fantastisch Kasteel",0xffd78c,0x649d70,0x477451]
+];
+const $=id=>document.getElementById(id);
+let scene,camera,renderer,player,clock,canPlay=false;
+let move={x:0,y:0},keys={},angle=0,pitch=.22;
+let gems=0,level=1,crystals=[],creatures=[],avatar={name:"Avonturier",skin:"#ffcfad",hair:"#43204e",outfit:"#8c55d9",hairStyle:"normal",accessory:"none",shoes:"dark"};
+const colors={
+ skin:["#ffdfc4","#f3c19a","#d99a6c","#a96c49","#75452f"],
+ hair:["#43204e","#17151c","#a85b32","#e8c44b","#ed77b5","#65a8ed","#ffffff"],
+ outfit:["#8c55d9","#ff5ca8","#258ed0","#32ad83","#e5a52e","#ef654f","#292b52","#f4f0ff"]
+};
+const select=$("worldSelect");
+worlds.forEach((w,i)=>{let o=document.createElement("option");o.value=i;o.textContent=w[0]+" "+(i+1)+". "+w[1];select.appendChild(o)});
+function say(t){$("message").textContent=t}
+function updateStats(){$("gems").textContent=gems;$("level").textContent=level}
+function mat(c){return new THREE.MeshStandardMaterial({color:c,roughness:.8})}
+function box(parent,x,y,z,a,b,c,color){
+ let m=new THREE.Mesh(new THREE.BoxGeometry(a,b,c),mat(color));
+ m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m;
+}
+function sphere(parent,x,y,z,r,color){
+ let m=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),mat(color));
+ m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m;
+}
+function makeAvatar(){
+ const g=new THREE.Group();
+ const skin=avatar.skin,hair=avatar.hair,outfit=avatar.outfit;
+ const body=new THREE.Mesh(new THREE.CapsuleGeometry(.36,.7,5,10),mat(outfit));
+ body.position.y=1.05;body.castShadow=true;g.add(body);
+ sphere(g,0,1.85,0,.3,skin);
+ sphere(g,0,2.02,-.04,.32,hair).scale.set(1,.55,1);
+ if(avatar.hairStyle==="spikes"){
+  for(let i=0;i<5;i++){
+   let h=new THREE.Mesh(new THREE.ConeGeometry(.13,.42,7),mat(hair));
+   h.position.set((i-2)*.12,2.3,0);g.add(h);
+  }
+ }
+ if(avatar.hairStyle==="long"){
+  let h=sphere(g,0,1.55,-.22,.25,hair);
+  h.scale.set(1,1.6,.7);
+ }
+ if(avatar.hairStyle==="crown"){
+  let h=new THREE.Mesh(new THREE.TorusGeometry(.28,.07,8,20),mat("#ffd34e"));
+  h.position.y=2.13;g.add(h);
+ }
+ for(let x of [-.11,.11])sphere(g,x,1.87,.27,.035,"#21152b");
+ for(let x of [-.19,.19]){
+  let leg=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.45,4,8),mat("#382e70"));
+  leg.position.set(x,.35,0);g.add(leg);
+  let shoeColor={dark:"#28243b",white:"#ffffff",gold:"#ffd34e",pink:"#ff75c8"}[avatar.shoes]||"#28243b";
+  box(g,x,.12,.08,.3,.2,.45,shoeColor);
+ }
+ if(avatar.accessory==="crown"){
+  let c=new THREE.Mesh(new THREE.ConeGeometry(.38,.35,5),mat("#ffd34e"));
+  c.position.y=2.38;g.add(c);
+ }
+ if(avatar.accessory==="hat"){
+  let h=new THREE.Mesh(new THREE.ConeGeometry(.35,.65,8),mat("#6337a0"));
+  h.position.y=2.45;g.add(h);
+  box(g,0,2.18,0,.75,.08,.75,"#6337a0");
+ }
+ if(avatar.accessory==="horns"){
+  let h=new THREE.Mesh(new THREE.ConeGeometry(.12,.65,8),mat("#fff0a4"));
+  h.position.set(0,2.45,0);g.add(h);
+ }
+ if(avatar.accessory==="wings"){
+  for(let side of [-1,1]){
+   let wing=sphere(g,side*.48,1.35,-.2,.38,"#e8c9ff");
+   wing.scale.set(.5,1.2,.2);
+  }
+ }
+ return g;
+}
+function refreshAvatar(){
+ if(!player)return;
+ const old=player;
+ player=makeAvatar();
+ player.position.copy(old.position);
+ player.rotation.copy(old.rotation);
+ scene.remove(old);
+ scene.add(player);
+}
+function clearWorld(){
+ for(const o of [...scene.children]){
+  if(o!==player&&o!==camera&&o.type!=="HemisphereLight"&&o.type!=="DirectionalLight")scene.remove(o);
+ }
+ crystals=[];creatures=[];
+}
+function tree(x,z,s,color){
+ let g=new THREE.Group();
+ let t=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.28*s,2.5*s,7),mat("#68432c"));
+ t.position.y=1.25*s;g.add(t);
+ for(let i=0;i<3;i++){
+  let l=new THREE.Mesh(new THREE.ConeGeometry((1.25-i*.2)*s,2.3*s,8),mat(color));
+  l.position.y=(2.5+i*.72)*s;l.castShadow=true;g.add(l);
+ }
+ g.position.set(x,0,z);scene.add(g);
+}
+function crystal(x,z){
+ let g=new THREE.Group();
+ let m=new THREE.Mesh(new THREE.OctahedronGeometry(.55),new THREE.MeshStandardMaterial({color:0x62ffff,emissive:0x147baf,emissiveIntensity:.8}));
+ m.position.y=1;g.add(m);
+ let light=new THREE.PointLight(0x55ddff,1.2,5);light.position.y=1;g.add(light);
+ g.position.set(x,0,z);scene.add(g);crystals.push({group:g,taken:false});
+}
+function creature(x,z){
+ let g=new THREE.Group();
+ sphere(g,0,.8,0,.65,"#d95d8c");
+ sphere(g,0,1.4,.25,.4,"#f28fb3");
+ g.position.set(x,0,z);scene.add(g);creatures.push({group:g,alive:true});
+}
+function buildWorld(index){
+ clearWorld();
+ const w=worlds[index];
+ scene.background=new THREE.Color(w[2]);scene.fog=new THREE.Fog(w[2],24,85);
+ let ground=new THREE.Mesh(new THREE.PlaneGeometry(180,180),mat(w[3]));
+ ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+ let path=new THREE.Mesh(new THREE.PlaneGeometry(5,95),mat("#b8a078"));
+ path.rotation.x=-Math.PI/2;path.position.set(0,.02,-20);scene.add(path);
+ for(let i=0;i<105;i++){
+  let side=i%2===0?-1:1;
+  tree(side*(5+Math.random()*45),-45+Math.random()*90,.65+Math.random()*.8,w[4]);
+ }
+ for(let i=0;i<45;i++){
+  let x=(Math.random()-.5)*85,z=(Math.random()-.5)*85;
+  let r=new THREE.Mesh(new THREE.DodecahedronGeometry(.3+Math.random()*.7),mat("#777b83"));
+  r.position.set(x,.35,z);r.scale.y=.75;scene.add(r);
+ }
+ for(let i=0;i<12;i++)crystal((Math.random()-.5)*60,-35+Math.random()*70);
+ for(let i=0;i<4;i++)creature((Math.random()-.5)*35,-10-Math.random()*30);
+ box(scene,0,2,-37,4,5,4,"#8061bd");
+ let roof=new THREE.Mesh(new THREE.ConeGeometry(3,3,8),mat("#ffd66c"));
+ roof.position.set(0,6,-37);scene.add(roof);
+ let portal=new THREE.Mesh(new THREE.TorusGeometry(2,.25,12,40),new THREE.MeshStandardMaterial({color:0x9c62ff,emissive:0x5522bb}));
+ portal.position.set(0,2,-42);scene.add(portal);
+ player.position.set(0,0,8);angle=0;pitch=.22;
+ select.value=index;
+ say(w[0]+" Welkom in "+w[1]+"! Loop rond en ontdek de wereld.");
+}
+function setup(){
+ if(!window.THREE){$("loadText").textContent="Geen internetverbinding voor 3D.";return}
+ scene=new THREE.Scene();
+ camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,300);
+ renderer=new THREE.WebGLRenderer({antialias:true});
+ renderer.setSize(innerWidth,innerHeight);
+ renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+ renderer.shadowMap.enabled=true;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;
+ $("game").appendChild(renderer.domElement);
+ scene.add(new THREE.HemisphereLight(0xffffff,0x526344,2));
+ let sun=new THREE.DirectionalLight(0xffffff,2);
+ sun.position.set(-15,35,20);sun.castShadow=true;scene.add(sun);
+ clock=new THREE.Clock();
+ player=makeAvatar();scene.add(player);
+ buildWorld(0);
+ $("loadText").textContent="Je 3D-wereld is klaar!";
+ $("play").style.display="block";
+ $("openCreator").style.display="block";
+ $("play").onclick=()=>{
+  canPlay=true;$("loading").style.display="none";
+  say("🌲 Veel plezier! Loop met de joystick en kijk rond.");
+  animate();
+ };
+ $("openCreator").onclick=()=>openCreator();
+}
+function updatePlayer(dt){
+ let f=move.y,s=move.x;
+ if(keys.w||keys.ArrowUp)f-=1;
+ if(keys.s||keys.ArrowDown)f+=1;
+ if(keys.a||keys.ArrowLeft)s-=1;
+ if(keys.d||keys.ArrowRight)s+=1;
+ let len=Math.hypot(f,s);
+ if(len>1){f/=len;s/=len}
+ if(Math.abs(f)+Math.abs(s)>.01){
+  let dx=-Math.sin(angle)*f+Math.cos(angle)*s;
+  let dz=-Math.cos(angle)*f-Math.sin(angle)*s;
+  player.position.x+=dx*7*dt;
+  player.position.z+=dz*7*dt;
+  player.rotation.y=Math.atan2(dx,dz)+Math.PI;
+ }
+ player.position.x=Math.max(-65,Math.min(65,player.position.x));
+ player.position.z=Math.max(-65,Math.min(65,player.position.z));
+ let d=7,h=Math.cos(pitch)*d;
+ let target=new THREE.Vector3(
+  player.position.x+Math.sin(angle)*h,
+  player.position.y+2.1+Math.sin(pitch)*d,
+  player.position.z+Math.cos(angle)*h
+ );
+ camera.position.lerp(target,.14);
+ camera.lookAt(player.position.x,player.position.y+1.3,player.position.z);
+ crystals.forEach(c=>{
+  if(c.taken)return;
+  c.group.rotation.y+=dt;
+  c.group.position.y=.2+Math.sin(performance.now()*.002+c.group.position.x)*.2;
+  if(c.group.position.distanceTo(player.position)<2){
+   c.taken=true;scene.remove(c.group);gems++;updateStats();
+   say("💎 Kristal gevonden! Je hebt "+gems+" kristallen!");
+  }
+ });
+ creatures.forEach(c=>{
+  if(!c.alive)return;
+  c.group.rotation.y+=dt*.5;
+  if(c.group.position.distanceTo(player.position)<1.8){
+   c.alive=false;scene.remove(c.group);gems+=3;updateStats();
+   say("✨ Magisch wezen ontmoet! +3 kristallen!");
+  }
+ });
+}
+function animate(){
+ if(!canPlay)return;
+ requestAnimationFrame(animate);
+ updatePlayer(Math.min(clock.getDelta(),.04));
+ renderer.render(scene,camera);
 }
 
-function discover(id){
- if(!save.done.includes('world-'+id)){
- save.done.push('world-'+id);
- reward(20,10);
- }
- complete(0);
- document.getElementById('mapDetail').innerHTML=`
- <div class="bigemoji">🎉</div>
- <h2>Adventure completed!</h2>
- <p>Je hebt deze wereld ontdekt!</p>
- <button class="primary" onclick="go('worlds')">BACK TO WORLDS</button>`;
+// Joystick
+const joy=$("joy"),stick=$("stick");
+let joyPointer=null;
+function joyMove(e){
+ let r=joy.getBoundingClientRect();
+ let x=e.clientX-(r.left+r.width/2),y=e.clientY-(r.top+r.height/2);
+ let max=r.width*.31,d=Math.hypot(x,y);
+ if(d>max){x=x/d*max;y=y/d*max}
+ move.x=x/max;move.y=y/max;
+ stick.style.left=(r.width/2-27+x)+"px";
+ stick.style.top=(r.height/2-27+y)+"px";
 }
+function joyReset(){
+ joyPointer=null;move.x=0;move.y=0;
+ stick.style.left="calc(50% - 27px)";stick.style.top="calc(50% - 27px)";
+}
+joy.addEventListener("pointerdown",e=>{e.preventDefault();joyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);joyMove(e)});
+joy.addEventListener("pointermove",e=>{if(e.pointerId===joyPointer)joyMove(e)});
+joy.addEventListener("pointerup",joyReset);
+joy.addEventListener("pointercancel",joyReset);
+
+// Camera besturen met rechterduim
+let look=null,lx=0,ly=0;
+const right=$("rightControls");
+right.addEventListener("pointerdown",e=>{
+ if(e.target.id==="interact")return;
+ look=e.pointerId;lx=e.clientX;ly=e.clientY;
+ right.setPointerCapture(e.pointerId);
+});
+right.addEventListener("pointermove",e=>{
+ if(e.pointerId!==look)return;
+ angle-=(e.clientX-lx)*.009;
+ pitch=Math.max(-.25,Math.min(.85,pitch+(e.clientY-ly)*.006));
+ lx=e.clientX;ly=e.clientY;
+});
+right.addEventListener("pointerup",()=>look=null);
+right.addEventListener("pointercancel",()=>look=null);
+document.addEventListener("keydown",e=>keys[e.key]=true);
+document.addEventListener("keyup",e=>keys[e.key]=false);
+select.addEventListener("change",()=>buildWorld(Number(select.value)));
+$("interact").onclick=()=>say("🔍 Ontdek de wereld en verzamel magische kristallen!");
+window.addEventListener("resize",()=>{
+ if(!renderer)return;
+ camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
+});
+
+// PERSONAGE-MAKER
+function makeColorButtons(id,list,key){
+ const container=$(id);
+ list.forEach(color=>{
+  const b=document.createElement("button");
+  b.className="color";b.style.background=color;
+  b.onclick=()=>{
+   avatar[key]=color;
+   [...container.children].forEach(x=>x.classList.remove("selected"));
+   b.classList.add("selected");
+   refreshAvatar();
+  };
+  container.appendChild(b);
+ });
+}
+makeColorButtons("skinColors",colors.skin,"skin");
+makeColorButtons("hairColors",colors.hair,"hair");
+makeColorButtons("outfitColors",colors.outfit,"outfit");
+
+function openCreator(){
+ $("creator").style.display="block";
+ $("avatarName").value=avatar.name;
+ $("hairStyle").value=avatar.hairStyle;
+ $("accessory").value=avatar.accessory;
+ $("shoes").value=avatar.shoes;
+}
+$("hairStyle").onchange=e=>{avatar.hairStyle=e.target.value;refreshAvatar()};
+$("accessory").onchange=e=>{avatar.accessory=e.target.value;refreshAvatar()};
+$("shoes").onchange=e=>{avatar.shoes=e.target.value;refreshAvatar()};
+$("saveAvatar").onclick=()=>{
+ avatar.name=$("avatarName").value.trim()||"Avonturier";
+ try{localStorage.setItem("fantasyAvatar",JSON.stringify(avatar))}catch(e){}
+ $("creator").style.display="none";
+ say("💖 "+avatar.name+" is klaar voor het avontuur!");
+};
+$("closeCreator").onclick=()=>{$("creator").style.display="none"};
+
+try{
+ const saved=JSON.parse(localStorage.getItem("fantasyAvatar")||"null");
+ if(saved)avatar={...avatar,...saved};
+ const progress=JSON.parse(localStorage.getItem("fantasyProgress")||"{}");
+ gems=progress.gems||0;level=progress.level||1;
+}catch(e){}
+updateStats();
+setInterval(()=>{
+ try{localStorage.setItem("fantasyProgress",JSON.stringify({gems,level}))}catch(e){}
+},5000);
+setup();
+})();
+</script>
+</body>
+</html>
